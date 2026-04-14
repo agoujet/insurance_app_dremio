@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Follow a Case — Auto Insurance Case Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+
+    <div class="mb-4">
+      <h2 class="fw-bold mb-1">
+        <i class="bi bi-search text-primary me-2"></i>Follow a Case
+      </h2>
+      <p class="text-muted">Search by Case Number or customer name.</p>
+    </div>
+
+    <!-- Search ─────────────────────────────────────────────────────── -->
+    <div class="card mb-4 shadow-sm">
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('follow_case') }}" class="d-flex gap-2">
+          <input type="text" class="form-control form-control-lg" name="search"
+                 value="{{ search_term }}"
+                 placeholder="Case Number (CLM-…) / Customer name…"
+                 autofocus>
+          <button type="submit" class="btn btn-primary btn-lg px-4">
+            <i class="bi bi-search me-1"></i>Search
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Results ─────────────────────────────────────────────────────── -->
+    {% if cases %}
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <strong><i class="bi bi-list-ul me-2"></i>{{ cases|length }} result(s)</strong>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Case #</th>
+              <th>Customer</th>
+              <th>Type</th>
+              <th>Product</th>
+              <th>Incident date</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Est. amount</th>
+              <th>Agent</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in cases %}
+            <tr>
+              <td><code class="fw-bold">{{ c.case_number }}</code></td>
+              <td>{{ c.customer }}</td>
+              <td>{{ c.case_type }}</td>
+              <td class="small text-muted">{{ c.product_name }}</td>
+              <td>{{ c.incident_date }}</td>
+              <td>
+                <span class="badge priority-{{ c.priority | lower }}">{{ c.priority }}</span>
+              </td>
+              <td>
+                <span class="badge status-{{ c.status | lower | replace('_','-') }}">
+                  {{ c.status | replace('_',' ') }}
+                </span>
+              </td>
+              <td class="small">
+                {% if c.estimated_amount %}
+                  {{ "%.0f"|format(c.estimated_amount) }} €
+                {% else %}—{% endif %}
+              </td>
+              <td class="small text-muted">{{ c.assigned_agent or '—' }}</td>
+              <td>
+                <a href="{{ url_for('case_detail', case_number=c.case_number) }}"
+                   class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-pencil-square me-1"></i>Open
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {% elif request.method == 'POST' and search_term %}
+    <div class="alert alert-info">
+      <i class="bi bi-info-circle me-2"></i>
+      No cases found for "<strong>{{ search_term }}</strong>".
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

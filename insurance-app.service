@@ -1,0 +1,16 @@
+[Unit]
+Description=Insurance Case Manager (Flask)
+After=network.target
+
+[Service]
+User=rocky
+WorkingDirectory=/home/rocky/insurance_app
+ExecStart=/usr/bin/python3 /home/rocky/insurance_app/app.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+Environment="PYTHONUNBUFFERED=1"
+
+[Install]
+WantedBy=multi-user.target

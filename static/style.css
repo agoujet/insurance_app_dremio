@@ -1,0 +1,109 @@
+/* ── Variables ──────────────────────────────────────────────────────── */
+:root {
+  --primary:       #1a3a6b;
+  --primary-light: #2550a0;
+  --bg-page:       #f0f4f9;
+}
+
+/* ── Base ───────────────────────────────────────────────────────────── */
+body {
+  background-color: var(--bg-page);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* ── Top Navbar ─────────────────────────────────────────────────────── */
+.top-navbar {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  padding: .75rem 1.5rem;
+  z-index: 1040;
+  box-shadow: 0 2px 12px rgba(0,0,0,.18);
+}
+.top-navbar .navbar-brand { color: #fff !important; }
+
+/* ── Sidebar ────────────────────────────────────────────────────────── */
+.sidebar-header {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  padding: 1.25rem 1.5rem;
+}
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  padding: .75rem 0;
+}
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  padding: .85rem 1.5rem;
+  color: #343a40;
+  text-decoration: none;
+  font-weight: 500;
+  border-left: 3px solid transparent;
+  transition: all .18s;
+}
+.sidebar-link:hover,
+.sidebar-link.active {
+  background-color: #e8f0fe;
+  color: var(--primary);
+  border-left-color: var(--primary);
+}
+.sidebar-link.active { font-weight: 600; }
+
+/* ── Hero / Home ────────────────────────────────────────────────────── */
+.hero-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.08);
+}
+.action-icon {
+  width: 70px; height: 70px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── Action Cards ───────────────────────────────────────────────────── */
+.action-card {
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+  transition: transform .22s, border-color .22s, box-shadow .22s;
+  color: inherit;
+}
+.action-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--primary-light);
+  box-shadow: 0 10px 28px rgba(26,58,107,.14);
+}
+
+/* ── Form Sections ──────────────────────────────────────────────────── */
+.form-section {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.07);
+  overflow: hidden;
+}
+.section-header {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  border-bottom: none !important;
+}
+.section-header h5 { color: #fff !important; }
+
+/* ── Priority Badges ────────────────────────────────────────────────── */
+.priority-low      { background-color: #adb5bd !important; color: #fff; }
+.priority-medium   { background-color: #0d6efd !important; color: #fff; }
+.priority-high     { background-color: #fd7e14 !important; color: #fff; }
+.priority-critical { background-color: #dc3545 !important; color: #fff; }
+
+/* ── Status Badges ──────────────────────────────────────────────────── */
+.badge { font-weight: 500; letter-spacing: .03em; }
+
+.status-open           { background-color: #0dcaf0 !important; color: #000; }
+.status-in-progress    { background-color: #fd7e14 !important; color: #fff; }
+.status-under-review   { background-color: #6f42c1 !important; color: #fff; }
+.status-resolved       { background-color: #198754 !important; color: #fff; }
+.status-closed         { background-color: #6c757d !important; color: #fff; }
+
+/* ── Misc ───────────────────────────────────────────────────────────── */
+.table > thead > tr > th { font-size: .85rem; text-transform: uppercase; letter-spacing: .04em; }
+
+/* ── AI spinner ─────────────────────────────────────────────────────── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { display: inline-block; animation: spin .8s linear infinite; }

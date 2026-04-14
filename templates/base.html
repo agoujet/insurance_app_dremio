@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Auto Insurance Case Manager{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ── Collapsible Sidebar (Offcanvas) ─────────────────────────────── -->
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+    <div class="offcanvas-header sidebar-header">
+      <h5 class="offcanvas-title text-white" id="sidebarLabel">
+        <i class="bi bi-shield-check me-2"></i>Insurance Manager
+      </h5>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+      <nav class="sidebar-nav">
+        <a href="{{ url_for('index') }}"
+           class="sidebar-link {% if request.endpoint == 'index' %}active{% endif %}">
+          <i class="bi bi-house-door me-2"></i>Home
+        </a>
+        <a href="{{ url_for('new_case') }}"
+           class="sidebar-link {% if request.endpoint == 'new_case' %}active{% endif %}">
+          <i class="bi bi-plus-circle me-2"></i>New Case
+        </a>
+        <a href="{{ url_for('follow_case') }}"
+           class="sidebar-link {% if request.endpoint in ['follow_case', 'case_detail', 'update_case'] %}active{% endif %}">
+          <i class="bi bi-search me-2"></i>Follow a Case
+        </a>
+      </nav>
+      <hr class="mx-3">
+      <div class="px-3 text-muted small">
+        <i class="bi bi-database me-1"></i>Connected to Dremio Cloud
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Top Navbar ──────────────────────────────────────────────────── -->
+  <nav class="navbar top-navbar sticky-top">
+    <div class="container-fluid">
+      <button class="btn btn-outline-light me-3"
+              type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar"
+              aria-label="Toggle navigation">
+        <i class="bi bi-list fs-5"></i>
+      </button>
+      <span class="navbar-brand mb-0 fw-bold">
+        <i class="bi bi-car-front me-2"></i>Auto Insurance Case Manager
+      </span>
+      <span class="text-light small opacity-75 d-none d-md-block text-end" style="line-height:1.3">
+        <i class="bi bi-lightning-charge me-1"></i>Powered by Dremio Cloud<br>
+        <span class="opacity-50" style="font-size:.7rem">{{ release_tag }}</span>
+      </span>
+    </div>
+  </nav>
+
+  <!-- ── Flash Messages ──────────────────────────────────────────────── -->
+  <div class="container-fluid mt-3 px-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            <i class="bi bi-{% if category == 'success' %}check-circle{% elif category == 'danger' %}x-circle{% else %}info-circle{% endif %} me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- ── Main Content ────────────────────────────────────────────────── -->
+  <main class="container-fluid px-4 py-3">
+    {% block content %}{% endblock %}
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

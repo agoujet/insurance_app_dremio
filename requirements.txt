@@ -1,0 +1,4 @@
+flask
+pyarrow
+moto[s3,server]
+boto3

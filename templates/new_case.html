@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% block title %}New Case — Auto Insurance Case Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-10 col-lg-8 offset-md-1 offset-lg-2">
+
+    <div class="mb-4">
+      <h2 class="fw-bold mb-1">
+        <i class="bi bi-plus-circle text-success me-2"></i>Open a New Case
+      </h2>
+      <p class="text-muted">Fields marked <span class="text-danger">*</span> are required.</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('new_case') }}" novalidate>
+
+      <!-- Customer & Contract ──────────────────────────────────────── -->
+      <div class="card form-section mb-4">
+        <div class="card-header section-header">
+          <h5 class="mb-0"><i class="bi bi-person me-2"></i>Customer & Contract</h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Customer <span class="text-danger">*</span></label>
+              <select class="form-select" name="customer_id" id="customerSelect" required autofocus>
+                <option value="" disabled selected>Select a customer…</option>
+                {% for c in customers %}
+                <option value="{{ c.customer_id }}">{{ c.last_name }} {{ c.first_name }} — {{ c.email }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Contract / Policy <span class="text-danger">*</span></label>
+              <select class="form-select" name="contract_id" id="contractSelect" required>
+                <option value="" disabled selected>Select a contract…</option>
+                {% for ct in contracts %}
+                <option value="{{ ct.contract_id }}" data-customer="{{ ct.customer_id }}">{{ ct.contract_id }} — {{ ct.product_name }}</option>
+                {% endfor %}
+              </select>
+              <div class="form-text">Only contracts for the selected customer are shown.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Incident ──────────────────────────────────────────────────── -->
+      <div class="card form-section mb-4">
+        <div class="card-header section-header">
+          <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Incident Details</h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Incident Date <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" name="incident_date" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Case Type <span class="text-danger">*</span></label>
+              <select class="form-select" name="case_type" required>
+                <option value="" disabled selected>Select…</option>
+                <option value="ACCIDENT">Accident / Collision</option>
+                <option value="THEFT">Theft</option>
+                <option value="VANDALISM">Vandalism</option>
+                <option value="NATURAL_DISASTER">Natural Disaster / Weather</option>
+                <option value="FIRE">Fire</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Priority</label>
+              <select class="form-select" name="priority">
+                <option value="LOW">Low</option>
+                <option value="MEDIUM" selected>Medium</option>
+                <option value="HIGH">High</option>
+                <option value="CRITICAL">Critical</option>
+              </select>
+            </div>
+            <div class="col-md-8">
+              <label class="form-label">Incident Location</label>
+              <input type="text" class="form-control" name="incident_location" placeholder="City, road, landmark…">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Estimated Amount (€)</label>
+              <input type="number" class="form-control" name="estimated_amount" min="0" step="0.01" placeholder="0.00">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Description <span class="text-danger">*</span></label>
+              <textarea class="form-control" name="description" rows="4" required
+                        placeholder="Describe the incident in detail…"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Additional Notes</label>
+              <textarea class="form-control" name="notes" rows="2" placeholder="Internal notes, garage info…"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Photo ──────────────────────────────────────────────────────── -->
+      <div class="card form-section mb-4">
+        <div class="card-header section-header">
+          <h5 class="mb-0"><i class="bi bi-camera me-2"></i>Initial Photo <span class="text-muted fw-normal small">(optional)</span></h5>
+        </div>
+        <div class="card-body">
+
+          <!-- Browser gallery -->
+          <div class="border rounded p-3 bg-light mb-3">
+            <div class="d-flex align-items-center mb-2">
+              <h6 class="fw-semibold mb-0"><i class="bi bi-images me-1"></i>Browse Local Pictures</h6>
+              <button type="button" class="btn btn-sm btn-outline-primary ms-auto" id="btnLoadPicsNew">
+                <i class="bi bi-arrow-clockwise me-1"></i>Load from server
+              </button>
+            </div>
+            <div id="picGalleryNew" class="d-flex flex-wrap gap-2" style="max-height:200px;overflow-y:auto;">
+              <p class="text-muted small mb-0">Click "Load from server" to browse available photos.</p>
+            </div>
+          </div>
+
+          <!-- Hidden fields populated by picker -->
+          <div class="row g-2">
+            <div class="col-md-4">
+              <label class="form-label small">File Name</label>
+              <input type="text" class="form-control form-control-sm" name="photo_file_name" id="newDocFileName" placeholder="(none selected)" readonly>
+            </div>
+            <div class="col-md-5">
+              <label class="form-label small">File URL</label>
+              <input type="text" class="form-control form-control-sm" name="photo_file_url" id="newDocFileUrl" placeholder="(none selected)" readonly>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small">Photo Category</label>
+              <select class="form-select form-select-sm" name="photo_category">
+                <option value="">—</option>
+                <option value="DAMAGE">Damage</option>
+                <option value="OVERVIEW">Overview</option>
+                <option value="DETAIL">Detail</option>
+                <option value="SCENE">Scene</option>
+                <option value="DOCUMENT">Document</option>
+              </select>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 pb-4">
+        <button type="submit" class="btn btn-success btn-lg px-5">
+          <i class="bi bi-send me-2"></i>Submit Case
+        </button>
+        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-lg px-4">Cancel</a>
+      </div>
+
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const custSel = document.getElementById('customerSelect');
+  const contSel = document.getElementById('contractSelect');
+  const allOptions = Array.from(contSel.querySelectorAll('option[data-customer]'));
+
+  custSel.addEventListener('change', function() {
+    const custId = this.value;
+    contSel.innerHTML = '<option value="" disabled selected>Select a contract…</option>';
+    allOptions.forEach(function(opt) {
+      if (opt.dataset.customer === custId) {
+        contSel.appendChild(opt.cloneNode(true));
+      }
+    });
+  });
+});
+
+// Photo picker for new case
+document.getElementById('btnLoadPicsNew').addEventListener('click', function() {
+  const gallery = document.getElementById('picGalleryNew');
+  gallery.innerHTML = '<p class="text-muted small mb-0">Loading…</p>';
+
+  fetch('/api/pictures')
+    .then(r => r.json())
+    .then(pics => {
+      if (!pics.length) {
+        gallery.innerHTML = '<p class="text-muted small mb-0">No pictures available.</p>';
+        return;
+      }
+      gallery.innerHTML = '';
+      pics.forEach(pic => {
+        const col = document.createElement('div');
+        col.style.cursor = 'pointer';
+        col.title = `${pic.name} (${pic.size_kb} KB) — click to select`;
+        col.innerHTML = `
+          <img src="${pic.url}" alt="${pic.name}"
+               style="width:100px;height:75px;object-fit:cover;border-radius:6px;border:2px solid transparent;"
+               class="pic-thumb-new">
+          <div class="text-center small text-truncate" style="max-width:100px;">${pic.name}</div>`;
+        col.addEventListener('click', function() {
+          document.getElementById('newDocFileName').value = pic.name;
+          document.getElementById('newDocFileUrl').value  = pic.url;
+          gallery.querySelectorAll('.pic-thumb-new').forEach(img => img.style.borderColor = 'transparent');
+          col.querySelector('.pic-thumb-new').style.borderColor = '#198754';
+        });
+        gallery.appendChild(col);
+      });
+    })
+    .catch(() => {
+      gallery.innerHTML = '<p class="text-danger small mb-0">Failed to load pictures.</p>';
+    });
+});
+</script>
+{% endblock %}

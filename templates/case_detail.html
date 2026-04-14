@@ -1,0 +1,484 @@
+{% extends 'base.html' %}
+{% block title %}{{ case_number }} — Auto Insurance{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-lg-10 offset-lg-1">
+
+    <!-- Header ──────────────────────────────────────────────────────── -->
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+      <div>
+        <h2 class="fw-bold mb-1">
+          <i class="bi bi-folder2-open text-primary me-2"></i>{{ case_number }}
+        </h2>
+        <p class="text-muted font-monospace mb-0 small">ID: <span id="f-case_id" class="placeholder-glow"><span class="placeholder col-4"></span></span></p>
+      </div>
+      <a href="{{ url_for('follow_case') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to Search
+      </a>
+    </div>
+
+    <!-- Loading indicator -->
+    <div id="loadingOverlay" class="text-center py-5">
+      <div class="spinner-border text-primary mb-3" role="status"></div>
+      <p class="text-muted" id="loadingMsg">Loading case data…</p>
+    </div>
+
+    <!-- Main content (hidden until data arrives) -->
+    <div id="caseContent" style="display:none;">
+
+    <form method="POST" action="{{ url_for('update_case', case_number=case_number) }}">
+      <div class="row g-4">
+
+        <!-- Left column: Editable fields ─────────────────────────── -->
+        <div class="col-md-8">
+
+          <!-- Case Information -->
+          <div class="card form-section mb-4">
+            <div class="card-header section-header">
+              <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Case Information</h5>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label class="form-label fw-semibold">Case Number</label>
+                  <input type="text" class="form-control" value="{{ case_number }}" disabled>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-semibold">Contract ID</label>
+                  <input type="text" class="form-control" id="f-contract_id" disabled>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-semibold">Report Date</label>
+                  <input type="text" class="form-control" id="f-report_date" disabled>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">Case Type</label>
+                  <select class="form-select" name="case_type" id="f-case_type">
+                    <option value="ACCIDENT">ACCIDENT</option>
+                    <option value="THEFT">THEFT</option>
+                    <option value="VANDALISM">VANDALISM</option>
+                    <option value="NATURAL_DISASTER">NATURAL DISASTER</option>
+                    <option value="FIRE">FIRE</option>
+                    <option value="OTHER">OTHER</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">Incident Date</label>
+                  <input type="date" class="form-control" name="incident_date" id="f-incident_date">
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold">Incident Location</label>
+                  <input type="text" class="form-control" name="incident_location" id="f-incident_location">
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold">Description</label>
+                  <textarea class="form-control" name="description" rows="3" id="f-description"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contract + Customer side by side -->
+          <div class="row g-3 mb-4" id="contractCustomerRow">
+
+            <div class="col-md-6" id="contractCol" style="display:none;">
+              <div class="card form-section h-100">
+                <div class="card-header section-header">
+                  <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Contract Details</h5>
+                </div>
+                <div class="card-body">
+                  <dl class="row mb-0 small" id="contractDl"></dl>
+                </div>
+              </div>
+            </div>
+
+            <div id="customerCol">
+              <div class="card form-section h-100">
+                <div class="card-header section-header">
+                  <h5 class="mb-0"><i class="bi bi-person me-2"></i>Customer Information</h5>
+                </div>
+                <div class="card-body">
+                  <dl class="row mb-0 small" id="customerDl"></dl>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Right column: Status + Save ─────────────────────────── -->
+        <div class="col-md-4">
+          <div class="card form-section mb-4" style="position: sticky; top: 80px;">
+            <div class="card-header section-header">
+              <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Status & Priority</h5>
+            </div>
+            <div class="card-body">
+              <label class="form-label fw-semibold">Status</label>
+              <select class="form-select mb-3" name="status" id="f-status">
+                <option value="OPEN">OPEN</option>
+                <option value="IN_REVIEW">IN REVIEW</option>
+                <option value="INVESTIGATION">INVESTIGATION</option>
+                <option value="APPROVED">APPROVED</option>
+                <option value="REJECTED">REJECTED</option>
+                <option value="CLOSED">CLOSED</option>
+              </select>
+
+              <label class="form-label fw-semibold">Priority</label>
+              <select class="form-select mb-3" name="priority" id="f-priority">
+                <option value="LOW">LOW</option>
+                <option value="MEDIUM">MEDIUM</option>
+                <option value="HIGH">HIGH</option>
+                <option value="CRITICAL">CRITICAL</option>
+              </select>
+
+              <p class="text-muted small mb-3">
+                <i class="bi bi-calendar me-1"></i>Opened: <span id="f-created_at">—</span><br>
+                <i class="bi bi-pencil me-1"></i>Updated: <span id="f-updated_at">—</span>
+              </p>
+
+              <button type="submit" class="btn btn-primary w-100 btn-lg">
+                <i class="bi bi-check-circle me-1"></i>Save Changes
+              </button>
+            </div>
+          </div>
+
+          <!-- Financial & Assignment -->
+          <div class="card form-section mb-4">
+            <div class="card-header section-header">
+              <h5 class="mb-0"><i class="bi bi-currency-euro me-2"></i>Financial & Assignment</h5>
+            </div>
+            <div class="card-body small">
+              <div class="row g-2">
+                <div class="col-12">
+                  <label class="form-label fw-semibold mb-1">Estimated Amount</label>
+                  <div class="input-group input-group-sm">
+                    <input type="number" step="0.01" class="form-control form-control-sm" name="estimated_amount" id="f-estimated_amount" value="0">
+                    <span class="input-group-text">€</span>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold mb-1">Approved Amount</label>
+                  <div class="input-group input-group-sm">
+                    <input type="number" step="0.01" class="form-control form-control-sm" name="approved_amount" id="f-approved_amount" value="0">
+                    <span class="input-group-text">€</span>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold mb-1">Assigned Agent</label>
+                  <input type="text" class="form-control form-control-sm" name="assigned_agent" id="f-assigned_agent">
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold mb-1">Notes</label>
+                  <textarea class="form-control form-control-sm" name="notes" rows="5" id="f-notes"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </form>
+
+    <!-- Documents ──────────────────────────────────────────────────── -->
+    <div class="card form-section mb-4">
+      <div class="card-header section-header d-flex align-items-center">
+        <h5 class="mb-0"><i class="bi bi-camera me-2"></i>Case Documents</h5>
+        <span class="badge bg-light text-dark ms-2" id="docCount">0</span>
+      </div>
+      <div class="card-body">
+
+        <div id="docTableWrap"></div>
+
+        <!-- Browse & Add document -->
+        <div class="border rounded p-3 bg-light">
+          <div class="d-flex align-items-center mb-2">
+            <h6 class="fw-semibold mb-0"><i class="bi bi-images me-1"></i>Browse & Add a Document</h6>
+            <button type="button" class="btn btn-sm btn-outline-primary ms-auto" id="btnLoadPics">
+              <i class="bi bi-arrow-clockwise me-1"></i>Load from server
+            </button>
+          </div>
+          <div id="picGallery" class="d-flex flex-wrap gap-2 mb-3" style="max-height: 240px; overflow-y: auto;">
+            <p class="text-muted small mb-0">Click "Load from server" to browse available photos.</p>
+          </div>
+          <form method="POST" action="{{ url_for('add_document', case_number=case_number) }}" id="docForm">
+            <div class="row g-2">
+              <div class="col-md-6">
+                <label class="form-label small">File Name</label>
+                <input type="text" class="form-control form-control-sm" name="file_name" id="docFileName"
+                       placeholder="photo_01.jpg" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small">File URL</label>
+                <input type="text" class="form-control form-control-sm" name="file_url" id="docFileUrl"
+                       placeholder="http://127.0.0.1:8080/...">
+              </div>
+            </div>
+            <input type="hidden" name="file_size_kb" id="docFileSize" value="0">
+            <div class="row mt-2">
+              <div class="col-12">
+                <button type="submit" class="btn btn-primary w-100">
+                  <i class="bi bi-upload me-1"></i>Add
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+
+    </div><!-- /caseContent -->
+
+  </div>
+</div>
+
+<!-- Image Preview Modal -->
+<div id="previewModal" onclick="this.style.display='none';"
+     style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;flex-direction:column;cursor:pointer;">
+  <img id="previewImg" src="" alt="Preview"
+       style="max-width:90%;max-height:80%;border-radius:8px;box-shadow:0 4px 30px rgba(0,0,0,.5);">
+  <p id="previewCaption" class="text-white mt-3 fs-5"></p>
+  <p class="text-white-50 small">Click anywhere to close</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const CASE_NUMBER = {{ case_number | tojson }};
+const CACHE_KEY   = 'case_' + CASE_NUMBER;
+const CACHE_TTL   = 5 * 60 * 1000; // 5 minutes
+
+// ── Populate page from data object ──────────────────────────────────
+function populate(data) {
+  const c = data.case;
+  if (!c) return;
+
+  // Header
+  document.getElementById('f-case_id').textContent = c.case_id || '—';
+
+  // Case Information
+  document.getElementById('f-contract_id').value     = c.contract_id || '';
+  document.getElementById('f-report_date').value     = c.report_date || '—';
+  document.getElementById('f-case_type').value       = c.case_type || 'ACCIDENT';
+  document.getElementById('f-incident_date').value   = c.incident_date || '';
+  document.getElementById('f-incident_location').value = c.incident_location || '';
+  document.getElementById('f-description').value     = c.description || '';
+
+  // Status & Priority
+  document.getElementById('f-status').value   = c.status || 'OPEN';
+  document.getElementById('f-priority').value = c.priority || 'MEDIUM';
+  document.getElementById('f-created_at').textContent = c.created_at || '—';
+  document.getElementById('f-updated_at').textContent = c.updated_at || '—';
+
+  // Financial
+  document.getElementById('f-estimated_amount').value = c.estimated_amount || 0;
+  document.getElementById('f-approved_amount').value  = c.approved_amount || 0;
+  document.getElementById('f-assigned_agent').value   = c.assigned_agent || '';
+  document.getElementById('f-notes').value            = c.notes || '';
+
+  // Customer
+  const custDl = document.getElementById('customerDl');
+  const addr = [c.address_line1, c.city, c.zip_code, c.country].filter(Boolean).join(', ');
+  let custHtml = `
+    <dt class="col-5 text-muted">Name</dt>
+    <dd class="col-7">${esc(c.first_name || '')} ${esc(c.last_name || '')}${c.gender ? ' <span class="text-muted">(' + esc(c.gender) + ')</span>' : ''}</dd>
+    <dt class="col-5 text-muted">Date of Birth</dt><dd class="col-7">${esc(c.date_of_birth || '—')}</dd>
+    <dt class="col-5 text-muted">Email</dt><dd class="col-7">${esc(c.email || '—')}</dd>
+    <dt class="col-5 text-muted">Phone</dt><dd class="col-7">${esc(c.phone || '—')}</dd>
+    <dt class="col-5 text-muted">Address</dt><dd class="col-7">${esc(addr || '—')}</dd>`;
+  if (c.risk_score) custHtml += `<dt class="col-5 text-muted">Risk Score</dt><dd class="col-7">${Number(c.risk_score).toFixed(1)}</dd>`;
+  custDl.innerHTML = custHtml;
+
+  // Contract
+  const ct = data.contract;
+  const contractCol = document.getElementById('contractCol');
+  const customerCol = document.getElementById('customerCol');
+  if (ct) {
+    contractCol.style.display = '';
+    customerCol.className = 'col-md-6';
+    const fmt = v => v != null ? Number(v).toFixed(2) + ' €' : '—';
+    document.getElementById('contractDl').innerHTML = `
+      <dt class="col-5 text-muted">ID</dt><dd class="col-7"><code>${esc(ct.contract_id)}</code></dd>
+      <dt class="col-5 text-muted">Type</dt><dd class="col-7">${esc(ct.contract_type || '—')}</dd>
+      <dt class="col-5 text-muted">Product</dt><dd class="col-7">${esc(ct.product_name || '—')}</dd>
+      <dt class="col-5 text-muted">Premium</dt><dd class="col-7">${ct.premium_amount ? fmt(ct.premium_amount) + ' (' + esc(ct.payment_frequency || '') + ')' : '—'}</dd>
+      <dt class="col-5 text-muted">Coverage</dt><dd class="col-7">${ct.coverage_amount ? fmt(ct.coverage_amount) : '—'}</dd>
+      <dt class="col-5 text-muted">Deductible</dt><dd class="col-7">${ct.deductible ? fmt(ct.deductible) : '—'}</dd>
+      <dt class="col-5 text-muted">Period</dt><dd class="col-7">${esc(ct.start_date || '?')} → ${esc(ct.end_date || '?')}</dd>
+      <dt class="col-5 text-muted">Status</dt><dd class="col-7"><span class="badge bg-${ct.status === 'ACTIVE' ? 'success' : 'secondary'}">${esc(ct.status || '—')}</span></dd>`;
+  } else {
+    contractCol.style.display = 'none';
+    customerCol.className = 'col-md-12';
+  }
+
+  // Documents
+  const docs = data.documents || [];
+  document.getElementById('docCount').textContent = docs.length;
+  const wrap = document.getElementById('docTableWrap');
+  if (!docs.length) {
+    wrap.innerHTML = '<p class="text-muted mb-3"><i class="bi bi-info-circle me-1"></i>No documents uploaded yet.</p>';
+  } else {
+    const imgExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    const isImg = n => n && imgExts.some(e => n.toLowerCase().endsWith(e));
+    let html = `<div class="table-responsive mb-4"><table class="table table-sm table-hover align-middle mb-0">
+      <thead class="table-light"><tr>
+        <th>Preview</th><th>Type</th><th>File Name</th>
+        <th>Category <span class="text-muted fw-normal">(Dremio AI)</span></th>
+        <th>Description <span class="text-muted fw-normal">(Dremio AI)</span></th>
+        <th>Size</th><th>Uploaded by</th><th>Date</th><th>Validated</th><th></th>
+      </tr></thead><tbody>`;
+    docs.forEach(d => {
+      const img = isImg(d.file_name);
+      html += '<tr>';
+      // Preview
+      html += '<td>';
+      if (d.file_url && img) {
+        html += `<img src="${esc(d.file_url)}" alt="${esc(d.file_name)}" style="width:60px;height:45px;object-fit:cover;border-radius:4px;cursor:pointer;" onclick="document.getElementById('previewModal').style.display='flex';document.getElementById('previewImg').src=this.src;document.getElementById('previewCaption').textContent='${esc(d.file_name)}';">`;
+      } else {
+        html += '<i class="bi bi-file-earmark text-muted" style="font-size:1.4rem;"></i>';
+      }
+      html += '</td>';
+      // Type
+      html += `<td><span class="badge bg-info text-dark">${esc(d.document_type || '')}</span></td>`;
+      // File name
+      html += '<td>';
+      if (d.file_url) html += `<a href="${esc(d.file_url)}" target="_blank">${esc(d.file_name)}</a>`;
+      else html += esc(d.file_name || '');
+      html += '</td>';
+      // Category, Description
+      html += `<td class="small cat-cell">${esc(d.photo_category || '—')}</td>`;
+      html += `<td class="desc-cell" style="min-width:220px;max-width:320px;"><div class="small" style="white-space:pre-wrap;word-break:break-word;max-height:80px;overflow-y:auto;background:#f8f9fa;border-radius:4px;padding:4px 6px;">${esc(d.description || '—')}</div></td>`;
+      // Size, Uploaded by, Date
+      html += `<td class="small text-muted">${d.file_size_kb ? d.file_size_kb + ' KB' : '—'}</td>`;
+      html += `<td class="small">${esc(d.uploaded_by || '—')}</td>`;
+      html += `<td class="small text-muted">${esc(d.uploaded_at || '—')}</td>`;
+      // Validated
+      html += '<td class="text-center">';
+      if (d.is_validated) html += `<i class="bi bi-check-circle-fill text-success" title="Validated"></i>`;
+      else html += '<i class="bi bi-clock text-muted" title="Pending validation"></i>';
+      html += '</td>';
+      // Actions
+      const aiUrl = `/case/${encodeURIComponent(CASE_NUMBER)}/ai-analyze/${encodeURIComponent(d.document_id)}`;
+      const rmUrl = `/case/${encodeURIComponent(CASE_NUMBER)}/remove-document/${encodeURIComponent(d.document_id)}`;
+      html += '<td class="text-nowrap">';
+      if (img) {
+        html += `<button type="button" class="btn btn-sm btn-outline-secondary border-0 me-1 btn-ai-analyze" title="Analyze with Dremio AI" data-doc-id="${esc(d.document_id)}" data-url="${aiUrl}"><i class="bi bi-stars"></i></button>`;
+      }
+      html += `<form method="POST" action="${rmUrl}" onsubmit="return confirm('Remove this document?');" style="display:inline;"><button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Remove document"><i class="bi bi-trash"></i></button></form>`;
+      html += '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    wrap.innerHTML = html;
+    // Re-bind AI analyze buttons
+    bindAiButtons();
+  }
+
+  // Show content, hide loading
+  document.getElementById('caseContent').style.display = '';
+  document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+// ── HTML escape helper ──────────────────────────────────────────────
+function esc(s) {
+  if (s == null) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
+// ── AI Analyze button handler ───────────────────────────────────────
+function bindAiButtons() {
+  document.querySelectorAll('.btn-ai-analyze').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const url  = btn.dataset.url;
+      const icon = btn.querySelector('i');
+      icon.className = 'bi bi-arrow-repeat spin';
+      btn.disabled = true;
+      fetch(url, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(r => r.json())
+        .then(data => {
+          if (data.error) { alert('AI Error: ' + data.error); icon.className = 'bi bi-stars'; btn.disabled = false; return; }
+          const row = btn.closest('tr');
+          const descCell = row.querySelector('td.desc-cell div');
+          if (descCell) descCell.textContent = data.description;
+          if (data.photo_category) { const catCell = row.querySelector('td.cat-cell'); if (catCell) catCell.textContent = data.photo_category; }
+          icon.className = 'bi bi-check-circle-fill text-success';
+          // Invalidate cache after AI update
+          localStorage.removeItem(CACHE_KEY);
+        })
+        .catch(err => { alert('Request failed: ' + err); icon.className = 'bi bi-stars'; btn.disabled = false; });
+    });
+  });
+}
+
+// ── Load from cache then fetch fresh data ───────────────────────────
+(function() {
+  // 1. Try cache for instant display
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (raw) {
+      const cached = JSON.parse(raw);
+      if (Date.now() - cached._ts < CACHE_TTL) {
+        populate(cached);
+        document.getElementById('loadingMsg').textContent = 'Refreshing…';
+      }
+    }
+  } catch(e) {}
+
+  // 2. Always fetch fresh data
+  fetch('/api/case/' + encodeURIComponent(CASE_NUMBER))
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(data => {
+      if (data.error) {
+        document.getElementById('loadingMsg').innerHTML = '<span class="text-danger"><i class="bi bi-x-circle me-1"></i>' + esc(data.error) + '</span>';
+        return;
+      }
+      // Save to cache
+      data._ts = Date.now();
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch(e) {}
+      populate(data);
+    })
+    .catch(err => {
+      // If we already showed cached data, just log; otherwise show error
+      if (document.getElementById('caseContent').style.display !== 'none') {
+        console.warn('Refresh failed:', err);
+      } else {
+        document.getElementById('loadingMsg').innerHTML = '<span class="text-danger"><i class="bi bi-x-circle me-1"></i>Failed to load: ' + esc(err.message) + '</span>';
+      }
+    });
+})();
+
+// ── Browse pictures ─────────────────────────────────────────────────
+document.getElementById('btnLoadPics').addEventListener('click', function () {
+  const gallery = document.getElementById('picGallery');
+  gallery.innerHTML = '<p class="text-muted small mb-0">Loading…</p>';
+  fetch('/api/pictures')
+    .then(r => r.json())
+    .then(pics => {
+      if (!pics.length) { gallery.innerHTML = '<p class="text-muted small mb-0">No pictures found on the server.</p>'; return; }
+      gallery.innerHTML = '';
+      pics.forEach(pic => {
+        const col = document.createElement('div');
+        col.style.cursor = 'pointer';
+        col.title = `${pic.name} (${pic.size_kb} KB) — click to select`;
+        col.innerHTML = `
+          <img src="${pic.url}" alt="${pic.name}"
+               style="width:100px;height:75px;object-fit:cover;border-radius:6px;border:2px solid transparent;"
+               class="pic-thumb">
+          <div class="text-center small text-truncate" style="max-width:100px;">${pic.name}</div>`;
+        col.addEventListener('click', function () {
+          document.getElementById('docFileName').value = pic.name;
+          document.getElementById('docFileUrl').value  = pic.url;
+          document.getElementById('docFileSize').value = pic.size_kb;
+          gallery.querySelectorAll('.pic-thumb').forEach(img => img.style.borderColor = 'transparent');
+          col.querySelector('.pic-thumb').style.borderColor = '#0d6efd';
+        });
+        gallery.appendChild(col);
+      });
+    })
+    .catch(() => { gallery.innerHTML = '<p class="text-danger small mb-0">Failed to load pictures from server.</p>'; });
+});
+</script>
+{% endblock %}
