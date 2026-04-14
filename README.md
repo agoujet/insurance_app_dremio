@@ -1,8 +1,12 @@
 # Insurance Case Manager
+<img width="1625" height="793" alt="image001" src="https://github.com/user-attachments/assets/c0981120-9270-4fc5-b01f-657229341405" />
+<img width="1624" height="912" alt="image002" src="https://github.com/user-attachments/assets/571153d4-58e7-4529-8d72-f72bb317beb2" />
 
 Web application for managing insurance cases, built with **Flask** and connected to **Dremio Cloud** via **Apache Arrow Flight**.
 
+
 ## Architecture
+
 
 ```
 Flask (port 5000)
@@ -10,7 +14,7 @@ Flask (port 5000)
   |       |-- Bronze layer: CUSTOMERS, CONTRACTS, CASES, CASE_DOCUMENTS tables
   |       |-- Silver layer: insu_open_all_case_fullinfo view
   |       `-- AI_GENERATE : vehicle damage image analysis
-  |
+
   |-- HTTP image server (port 8080, internal thread)
   `-- Mock S3 server via moto (port 9000, internal thread)
 ```
